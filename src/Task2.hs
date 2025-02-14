@@ -12,7 +12,7 @@ import Prelude hiding (reverse, map, filter, sum, foldl, foldr, length, head, ta
 -- You can reuse already implemented functions from Task1
 -- by listing them in this import clause
 -- NOTE: only listed functions are imported, everything else remains hidden
-import Task1 (reverse, map, sum)
+import Task1 (reverse, map, sum, doubleEveryOther, toDigits, luhn)
 
 -----------------------------------
 --
@@ -24,8 +24,15 @@ import Task1 (reverse, map, sum)
 -- >>> luhnModN 10 id [3,4,5,6]
 -- 1
 
+
+normalizeN :: Int -> Int -> Int
+normalizeN m n
+    | n > (m - 1) = n - (m - 1)
+    | otherwise = n
+
+
 luhnModN :: Int -> (a -> Int) -> [a] -> Int
-luhnModN = error "TODO: define luhnModN"
+luhnModN m f n = (m - (sum (map (normalizeN m) (doubleEveryOther (reverse (map f n))))) `mod` m) `mod` m
 
 -----------------------------------
 --
@@ -37,7 +44,7 @@ luhnModN = error "TODO: define luhnModN"
 -- 1
 
 luhnDec :: [Int] -> Int
-luhnDec = error "TODO: define luhnDec"
+luhnDec n = luhnModN 10 id n
 
 -----------------------------------
 --
@@ -49,7 +56,7 @@ luhnDec = error "TODO: define luhnDec"
 -- 15
 
 luhnHex :: [Char] -> Int
-luhnHex = error "TODO: define luhnHex"
+luhnHex n = luhnModN 16 digitToInt n
 
 -----------------------------------
 --
@@ -65,7 +72,15 @@ luhnHex = error "TODO: define luhnHex"
 -- [10,11,12,13,14,15]
 
 digitToInt :: Char -> Int
-digitToInt = error "TODO: define digitToInt"
+digitToInt n
+    | '0' <= n && n <= '9' = fromEnum n - fromEnum '0'
+    | n=='A' || n=='a' = 10
+    | n=='B' || n=='b' = 11
+    | n=='C' || n=='c' = 12
+    | n=='D' || n=='d' = 13
+    | n=='E' || n=='e' = 14
+    | n=='F' || n=='f' = 15
+    | otherwise = error "Wrong char is given"
 
 -----------------------------------
 --
@@ -82,7 +97,22 @@ digitToInt = error "TODO: define digitToInt"
 -- False
 
 validateDec :: Integer -> Bool
-validateDec = error "TODO: define validateDec"
+validateDec n
+    | luhnDec (toDigits (n `div` 10)) == ((fromIntegral n) `mod` 10) = True
+    | otherwise = False
+
+
+getLastChar :: [Char] -> Char
+getLastChar [] = error "Empty string!"
+getLastChar [x] = x
+getLastChar (_:xs) = getLastChar xs
+
+
+getPrefix :: [Char] -> [Char]
+getPrefix [] = error "Empty string!"
+getPrefix [_] = []
+getPrefix (x:xs) = x : getPrefix xs
+
 
 -----------------------------------
 --
@@ -99,4 +129,6 @@ validateDec = error "TODO: define validateDec"
 -- False
 
 validateHex :: [Char] -> Bool
-validateHex = error "TODO: define validateHex"
+validateHex n
+    | luhnHex (getPrefix n) == (digitToInt (getLastChar n)) = True
+    | otherwise = False
